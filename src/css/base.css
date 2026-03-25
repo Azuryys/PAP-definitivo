@@ -1,0 +1,181 @@
+/* =============================================
+   BASE STYLES & CSS VARIABLES
+   ============================================= */
+
+:root{
+  --bg-1: #0b1220;
+  --bg-2: #0b3b5a;
+  --card: rgba(255, 255, 255, 0.10);
+  --card-border: rgba(255, 255, 255, 0.16);
+  --text: rgba(255,255,255,0.92);
+  --muted: rgba(255,255,255,0.65);
+  --accent: #7c5cff;
+  --accent-2: #22d3ee;
+  --shadow: 0 24px 80px rgba(0,0,0,0.45);
+  --primary-color: #7c5cff;
+  --secondary-color: #22d3ee;
+  --background-color: #0b1220;
+  --text-color: rgba(255, 255, 255, 0.92);
+  --muted-color: rgba(255, 255, 255, 0.65);
+  --card-background: rgba(255, 255, 255, 0.10);
+  --card-border-color: rgba(255, 255, 255, 0.16);
+}
+
+*{ box-sizing: border-box; }
+
+body {
+  margin: 0;
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  background:
+    radial-gradient(1200px 800px at 15% 10%, rgba(124,92,255,0.35), transparent 55%),
+    radial-gradient(900px 700px at 85% 30%, rgba(34,211,238,0.25), transparent 55%),
+    linear-gradient(135deg, var(--bg-1), var(--bg-2));
+  min-height: 100vh;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+}
+
+.app-main {
+  padding: 32px clamp(20px, 4vw, 48px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.main-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.main-playlist h1 {
+  margin: 6px 0 6px 0;
+  font-size: clamp(24px, 3vw, 36px);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.main-playlist p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.main-eyebrow {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+
+.main-secondary {
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.player-section {
+  flex: 1;
+  display: grid;
+  place-items: center;
+}
+
+@media (max-width: 920px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .app-main {
+    padding: 24px;
+  }
+}
+
+/* Page Navigation */
+.page {
+  display: none;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.page.active {
+  display: block;
+}
+
+button {
+  background-color: var(--primary-color);
+  color: var(--text-color);
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: var(--secondary-color);
+}
+
+/* Common utility */
+.hidden { display: none !important; }
+
+/* ── Import notification banner ──────────────────────────────── */
+.import-notification {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%);
+  border-bottom: 1px solid rgba(102, 126, 234, 0.3);
+  font-size: 14px;
+  color: #ddd;
+  z-index: 10;
+}
+
+.import-notification-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.import-notification-actions button {
+  padding: 6px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.import-notification-actions button:first-child {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+.import-notification-actions button:first-child:hover {
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.import-notification-actions button:last-child {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ccc;
+}
+
+.import-notification-actions button:last-child:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.import-notification-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

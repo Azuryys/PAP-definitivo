@@ -126,12 +126,34 @@ function goBackFromSettings() {
     starterPage.classList.add('active');
 }
 
+function goToPlugins() {
+    const pluginsPage = document.getElementById('pluginsPage');
+    const starterPage = document.getElementById('starterPage');
+    const settingsPage = document.getElementById('settingsPage');
+
+    starterPage.classList.remove('active');
+    settingsPage.classList.remove('active');
+    pluginsPage.classList.add('active');
+
+    if (window.initPlugins) window.initPlugins();
+}
+
+function goBackFromPlugins() {
+    const pluginsPage = document.getElementById('pluginsPage');
+    const starterPage = document.getElementById('starterPage');
+
+    pluginsPage.classList.remove('active');
+    starterPage.classList.add('active');
+}
+
 // Make navigation functions globally accessible
 window.goToPlayer = goToPlayer;
 window.goToStarter = goToStarter;
 window.goToSetup = goToSetup;
 window.goToSettings = goToSettings;
 window.goBackFromSettings = goBackFromSettings;
+window.goToPlugins = goToPlugins;
+window.goBackFromPlugins = goBackFromPlugins;
 window.initApp = initApp;
 
 // Modal tab switching for Create Playlist
@@ -155,56 +177,241 @@ function showPlaylistTab(tab) {
 }
 window.showPlaylistTab = showPlaylistTab;
 
-// YouTube Playlist Tab Logic
-async function loadYoutubePlaylist() {
+// ── YouTube Playlist Tab Logic (Create Playlist Modal) ──────────────────────
+
+// Store loaded playlist info for import
+let loadedYoutubePlaylistInfo = null;
+
+/**
+ * Load YouTube playlist info for preview (no download yet)
+ */
+async function loadYoutubePlaylistInfo() {
     const urlInput = document.getElementById('youtubePlaylistUrl');
     const preview = document.getElementById('youtubePlaylistPreview');
+    const editFields = document.getElementById('youtubePlaylistEditFields');
+    const status = document.getElementById('youtubePlaylistStatus');
+    const importBtn = document.getElementById('ytPlaylistImportBtn');
+    const loadBtn = document.getElementById('ytPlaylistLoadBtn');
+
     if (!urlInput || !preview) return;
+
     const url = urlInput.value.trim();
     if (!url) {
         preview.classList.add('hidden');
         preview.innerHTML = '';
+        if (editFields) editFields.classList.add('hidden');
+        if (importBtn) importBtn.disabled = true;
+        loadedYoutubePlaylistInfo = null;
         return;
     }
+
+    // Show loading state
     preview.classList.remove('hidden');
     preview.innerHTML = '<div class="yt-status loading">Loading playlist info...</div>';
+    if (editFields) editFields.classList.add('hidden');
+    if (status) { status.classList.add('hidden'); status.innerHTML = ''; }
+    if (importBtn) importBtn.disabled = true;
+    if (loadBtn) loadBtn.disabled = true;
+
     try {
-        // Call IPC handler to fetch playlist info only (no download yet)
-        const result = await window.electronAPI.importYoutubePlaylist({ playlistUrl: url });
+        const result = await window.electronAPI.getYoutubePlaylistInfo(url);
+        if (loadBtn) loadBtn.disabled = false;
+
         if (result.success && result.playlist) {
-            const { title, description, cover, videos } = result.playlist;
+            loadedYoutubePlaylistInfo = result.playlist;
+            const { title, description, thumbnail, videoCount } = result.playlist;
             preview.innerHTML = `
-                <div class="yt-info"><strong>${title}</strong><span>${description || ''}</span></div>
-                ${cover ? `<img class="yt-thumb" src="${cover}" alt="Playlist Cover">` : ''}
-                <div style="margin-top:8px;font-size:13px;color:var(--muted);">${videos.length} videos detected</div>
+                ${thumbnail ? `<img class="yt-thumb" src="${thumbnail}" alt="Playlist Cover">` : ''}
+                <div class="yt-info">
+                    <strong>${title || 'Untitled Playlist'}</strong>
+                    <span>${description || ''}</span>
+                    <span style="margin-top:4px;font-size:13px;color:var(--muted);">${videoCount} video${videoCount !== 1 ? 's' : ''}</span>
+                </div>
             `;
+            if (editFields) {
+                editFields.classList.remove('hidden');
+                const nameInput = document.getElementById('ytPlaylistName');
+                if (nameInput) nameInput.value = title || '';
+            }
+            if (importBtn) importBtn.disabled = false;
         } else {
             preview.innerHTML = `<div class="yt-status error">${result.message || 'Could not load playlist info.'}</div>`;
+            loadedYoutubePlaylistInfo = null;
         }
     } catch (err) {
+        if (loadBtn) loadBtn.disabled = false;
         preview.innerHTML = `<div class="yt-status error">Error: ${err.message}</div>`;
+        loadedYoutubePlaylistInfo = null;
     }
 }
 
-async function importYoutubePlaylist() {
+/**
+ * Import YouTube playlist songs and create playlist
+ */
+async function importYoutubePlaylistSongs() {
+    if (!loadedYoutubePlaylistInfo) {
+        alert('Please load a playlist first.');
+        return;
+    }
+
     const urlInput = document.getElementById('youtubePlaylistUrl');
-    if (!urlInput) return;
-    const url = urlInput.value.trim();
+    const nameInput = document.getElementById('ytPlaylistName');
+    const status = document.getElementById('youtubePlaylistStatus');
+    const importBtn = document.getElementById('ytPlaylistImportBtn');
+    const loadBtn = document.getElementById('ytPlaylistLoadBtn');
+    const progressContainer = document.getElementById('youtubePlaylistProgress');
+    const progressTitle = document.getElementById('ytProgressTitle');
+    const progressCount = document.getElementById('ytProgressCount');
+    const progressBar = document.getElementById('ytProgressBar');
+    const progressLog = document.getElementById('ytProgressLog');
+
+    const url = urlInput?.value?.trim();
     if (!url) return;
-    // Optionally, show a loading state or disable button
+
+    const playlistName = nameInput?.value?.trim() || loadedYoutubePlaylistInfo.title || 'YouTube Playlist';
+
+    // Disable buttons and show progress
+    if (importBtn) importBtn.disabled = true;
+    if (loadBtn) loadBtn.disabled = true;
+    if (status) status.classList.add('hidden');
+
+    // Show progress container
+    if (progressContainer) {
+        progressContainer.classList.remove('hidden');
+        if (progressTitle) progressTitle.textContent = 'Preparing download...';
+        if (progressCount) progressCount.textContent = '0/0';
+        if (progressBar) progressBar.style.width = '0%';
+        if (progressLog) progressLog.innerHTML = '';
+    }
+
+    // Set up progress listener
+    window.electronAPI.onYoutubePlaylistProgress((data) => {
+        if (progressTitle) {
+            if (data.status === 'starting') {
+                progressTitle.textContent = 'Starting download...';
+            } else if (data.status === 'downloading') {
+                progressTitle.textContent = 'Downloading...';
+            } else if (data.status === 'complete') {
+                progressTitle.textContent = 'Complete!';
+            }
+        }
+
+        if (progressCount && data.current !== undefined && data.total) {
+            progressCount.textContent = `${data.current}/${data.total}`;
+        }
+
+        if (progressBar && data.current !== undefined && data.total) {
+            const percent = (data.current / data.total) * 100;
+            progressBar.style.width = `${percent}%`;
+        }
+
+        if (progressLog && data.message) {
+            const logItem = document.createElement('div');
+            logItem.className = `yt-progress-log-item ${data.status}`;
+            logItem.textContent = data.message;
+            progressLog.appendChild(logItem);
+            // Auto-scroll to bottom
+            progressLog.scrollTop = progressLog.scrollHeight;
+        }
+    });
+
     try {
-        const result = await window.electronAPI.importYoutubePlaylist({ playlistUrl: url });
-        if (result.success) {
-            alert('Playlist imported successfully!');
-            closeCreatePlaylistModal();
-            // Optionally, refresh playlists in UI
+        const result = await window.electronAPI.importYoutubePlaylist({
+            playlistUrl: url,
+            playlistName: playlistName,
+            playlistCover: loadedYoutubePlaylistInfo.thumbnail || null
+        });
+
+        // Remove the progress listener
+        window.electronAPI.removeYoutubePlaylistProgressListener();
+
+        if (result.success && result.playlist) {
+            // Save the playlist to localStorage
+            if (window.loadPlaylists && window.savePlaylists) {
+                const playlists = window.loadPlaylists();
+                playlists.push(result.playlist);
+                window.savePlaylists(playlists);
+            }
+
+            if (status) {
+                status.classList.remove('hidden');
+                status.className = 'yt-status success';
+                let msg = `Playlist "${result.playlistName}" created with ${result.songsImported} song(s)!`;
+                if (result.skippedVideos > 0) {
+                    msg += ` (${result.skippedVideos} unavailable skipped)`;
+                }
+                status.innerHTML = msg;
+            }
+
+            // Refresh UI after successful import
+            if (window.reloadSongsInPlayer) await window.reloadSongsInPlayer();
+            if (window.renderPlaylists && window.loadPlaylists) {
+                window.renderPlaylists(window.loadPlaylists());
+            }
+            // Set the new playlist as active
+            if (window.setActivePlaylistById && result.playlist.id) {
+                window.setActivePlaylistById(result.playlist.id);
+            }
+
+            // Close modal after a brief delay to show success message
+            setTimeout(() => {
+                closeCreatePlaylistModal();
+                resetYoutubePlaylistTab();
+            }, 2500);
         } else {
-            alert('Import failed: ' + (result.message || 'Unknown error'));
+            if (status) {
+                status.classList.remove('hidden');
+                status.className = 'yt-status error';
+                status.innerHTML = `Import failed: ${result.message || 'Unknown error'}`;
+            }
+            if (importBtn) importBtn.disabled = false;
+            if (loadBtn) loadBtn.disabled = false;
         }
     } catch (err) {
-        alert('Import error: ' + err.message);
+        // Remove the progress listener on error
+        window.electronAPI.removeYoutubePlaylistProgressListener();
+
+        if (status) {
+            status.classList.remove('hidden');
+            status.className = 'yt-status error';
+            status.innerHTML = `Import error: ${err.message}`;
+        }
+        if (importBtn) importBtn.disabled = false;
+        if (loadBtn) loadBtn.disabled = false;
     }
 }
-window.loadYoutubePlaylist = loadYoutubePlaylist;
-window.importYoutubePlaylist = importYoutubePlaylist;
+
+/**
+ * Reset YouTube playlist tab to initial state
+ */
+function resetYoutubePlaylistTab() {
+    loadedYoutubePlaylistInfo = null;
+    const urlInput = document.getElementById('youtubePlaylistUrl');
+    const preview = document.getElementById('youtubePlaylistPreview');
+    const editFields = document.getElementById('youtubePlaylistEditFields');
+    const status = document.getElementById('youtubePlaylistStatus');
+    const importBtn = document.getElementById('ytPlaylistImportBtn');
+    const nameInput = document.getElementById('ytPlaylistName');
+    const progressContainer = document.getElementById('youtubePlaylistProgress');
+    const progressLog = document.getElementById('ytProgressLog');
+
+    if (urlInput) urlInput.value = '';
+    if (preview) { preview.classList.add('hidden'); preview.innerHTML = ''; }
+    if (editFields) editFields.classList.add('hidden');
+    if (status) { status.classList.add('hidden'); status.innerHTML = ''; }
+    if (importBtn) importBtn.disabled = true;
+    if (nameInput) nameInput.value = '';
+    if (progressContainer) progressContainer.classList.add('hidden');
+    if (progressLog) progressLog.innerHTML = '';
+
+    // Clean up any lingering progress listener
+    if (window.electronAPI?.removeYoutubePlaylistProgressListener) {
+        window.electronAPI.removeYoutubePlaylistProgressListener();
+    }
+}
+
+window.loadYoutubePlaylistInfo = loadYoutubePlaylistInfo;
+window.importYoutubePlaylistSongs = importYoutubePlaylistSongs;
+window.resetYoutubePlaylistTab = resetYoutubePlaylistTab;
+
 

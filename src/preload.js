@@ -5,7 +5,14 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 // Expose database API to renderer process
 contextBridge.exposeInMainWorld('electronAPI', {
-    importYoutubePlaylist: (opts) => ipcRenderer.invoke('import-youtube-playlist', opts),
+  getYoutubePlaylistInfo: (url) => ipcRenderer.invoke('get-youtube-playlist-info', url),
+  importYoutubePlaylist: (opts) => ipcRenderer.invoke('import-youtube-playlist', opts),
+  onYoutubePlaylistProgress: (callback) => {
+    ipcRenderer.on('youtube-playlist-progress', (_event, data) => callback(data));
+  },
+  removeYoutubePlaylistProgressListener: () => {
+    ipcRenderer.removeAllListeners('youtube-playlist-progress');
+  },
   getUserVolume: () => ipcRenderer.invoke('get-user-volume'),
   setUserVolume: (volume) => ipcRenderer.invoke('set-user-volume', volume),
   addSong: (songData) => ipcRenderer.invoke('add-song', songData),

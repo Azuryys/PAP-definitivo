@@ -1,4 +1,6 @@
 import discImg from '../../images/disc.png';
+import { initEqualizer } from '../plugins/equalizer.js';
+import { checkCrossfade, isCrossfadeActive, cancelCrossfade } from '../plugins/crossfade.js';
 
 // Control icons
 import backIcon from './images/back.png';
@@ -162,6 +164,8 @@ function loadTrack(track_index){
                 const blobUrl = URL.createObjectURL(blob);
                 track_art.style.backgroundImage = `url("${blobUrl}")`;
                 console.log('✓ Custom image loaded via Blob URL');
+                // Sync fullscreen art if overlay is visible
+                syncFullscreenArt();
             } else {
                 console.error('Failed to load image:', result.message);
                 track_art.style.backgroundImage = `url("${discImg}")`;
@@ -173,6 +177,8 @@ function loadTrack(track_index){
     } else {
         // Use default disc image
         track_art.style.backgroundImage = `url("${discImg}")`;
+        // Sync fullscreen art
+        syncFullscreenArt();
     }
     track_name.textContent = track.name;
     track_artist.textContent = track.artist;
@@ -180,9 +186,13 @@ function loadTrack(track_index){
 
     updateTimer = setInterval(setUpdate, 1000);
 
-    curr_track.addEventListener('ended', nextTrack);
+    // Remove old ended listener and add new one with crossfade check
+    curr_track.removeEventListener('ended', handleTrackEnded);
+    curr_track.addEventListener('ended', handleTrackEnded);
     showPlayerBar();
     syncPlaylistQueuePosition();
+    // Always sync fullscreen art info after track info is set
+    syncFullscreenArt();
 }
 
 function showPlayerBar() {
@@ -194,6 +204,187 @@ function showPlayerBar() {
         if (shell) shell.classList.add('has-player');
     }
 }
+
+// Fullscreen album art overlay functionality
+let fsIdleTimer = null;
+const FS_IDLE_TIMEOUT = 10000; // 10 seconds
+
+function toggleFullscreenArt() {
+    const overlay = document.getElementById('fullscreenArtOverlay');
+    if (!overlay) return;
+    
+    if (overlay.classList.contains('hidden')) {
+        // Show the overlay and sync current track info
+        syncFullscreenArt();
+        overlay.classList.remove('hidden');
+        // Start idle detection
+        startFsIdleTimer();
+        overlay.addEventListener('mousemove', handleFsMouseMove);
+        overlay.addEventListener('click', handleFsMouseMove);
+    } else {
+        // Hide the overlay
+        overlay.classList.add('hidden');
+        overlay.classList.remove('fs-idle');
+        // Stop idle detection
+        stopFsIdleTimer();
+        overlay.removeEventListener('mousemove', handleFsMouseMove);
+        overlay.removeEventListener('click', handleFsMouseMove);
+    }
+}
+
+function startFsIdleTimer() {
+    stopFsIdleTimer();
+    fsIdleTimer = setTimeout(() => {
+        const overlay = document.getElementById('fullscreenArtOverlay');
+        if (overlay && !overlay.classList.contains('hidden')) {
+            overlay.classList.add('fs-idle');
+        }
+    }, FS_IDLE_TIMEOUT);
+}
+
+function stopFsIdleTimer() {
+    if (fsIdleTimer) {
+        clearTimeout(fsIdleTimer);
+        fsIdleTimer = null;
+    }
+}
+
+function handleFsMouseMove() {
+    const overlay = document.getElementById('fullscreenArtOverlay');
+    if (overlay) {
+        overlay.classList.remove('fs-idle');
+    }
+    startFsIdleTimer();
+}
+
+function syncFullscreenArt() {
+    const overlay = document.getElementById('fullscreenArtOverlay');
+    if (!overlay) return;
+    
+    const fsArtImage = overlay.querySelector('.fullscreen-art-image');
+    const fsArtBg = overlay.querySelector('.fullscreen-art-bg');
+    const fsTitle = overlay.querySelector('.fullscreen-art-title');
+    const fsArtist = overlay.querySelector('.fullscreen-art-artist');
+    
+    // Get current track art image from player bar
+    const currentArt = track_art ? track_art.style.backgroundImage : '';
+    
+    if (fsArtImage) {
+        fsArtImage.style.backgroundImage = currentArt;
+    }
+    if (fsArtBg) {
+        fsArtBg.style.backgroundImage = currentArt;
+    }
+    if (fsTitle && track_name) {
+        fsTitle.textContent = track_name.textContent;
+    }
+    if (fsArtist && track_artist) {
+        fsArtist.textContent = track_artist.textContent;
+    }
+    
+    // Sync control buttons
+    const fsPlayPause = overlay.querySelector('.fs-playpause-track');
+    const fsPrev = overlay.querySelector('.fs-prev-track');
+    const fsNext = overlay.querySelector('.fs-next-track');
+    const fsRandom = overlay.querySelector('.fs-random-track');
+    const fsRepeat = overlay.querySelector('.fs-repeat-track');
+    const fsMute = overlay.querySelector('.fs-mute-track');
+    const fsVolumeSlider = overlay.querySelector('.fs-volume-slider');
+    
+    if (fsPlayPause) {
+        fsPlayPause.style.backgroundImage = `url("${isPlaying ? pauseIcon : playIcon}")`;
+    }
+    if (fsPrev) {
+        fsPrev.style.backgroundImage = `url("${backIcon}")`;
+    }
+    if (fsNext) {
+        fsNext.style.backgroundImage = `url("${nextIcon}")`;
+    }
+    if (fsRandom) {
+        fsRandom.style.backgroundImage = `url("${isRandom ? shuffleOnIcon : shuffleOffIcon}")`;
+    }
+    if (fsRepeat) {
+        let loopIcon;
+        switch (loopState) {
+            case 1: loopIcon = loop2Icon; break;
+            case 2: loopIcon = loopIndividualIcon; break;
+            default: loopIcon = loopingIcon;
+        }
+        fsRepeat.style.backgroundImage = `url("${loopIcon}")`;
+    }
+    if (fsMute) {
+        fsMute.style.backgroundImage = `url("${audioState.isMuted || audioState.volume === 0 ? muteIcon : unmuteIcon}")`;
+    }
+    if (fsVolumeSlider) {
+        fsVolumeSlider.value = audioState.isMuted ? 0 : audioState.volume;
+        updateFsVolumeFill(fsVolumeSlider);
+    }
+    
+    // Sync time display
+    const fsCurrentTime = overlay.querySelector('.fs-current-time');
+    const fsTotalDuration = overlay.querySelector('.fs-total-duration');
+    if (fsCurrentTime && curr_time) {
+        fsCurrentTime.textContent = curr_time.textContent;
+    }
+    if (fsTotalDuration && total_duration) {
+        fsTotalDuration.textContent = total_duration.textContent;
+    }
+}
+
+function updateFsVolumeFill(slider) {
+    if (!slider) return;
+    const min = Number(slider.min || 0);
+    const max = Number(slider.max || 100);
+    const val = Number(slider.value || 0);
+    const pct = ((val - min) * 100) / (max - min);
+    slider.style.background = `linear-gradient(90deg,
+        rgba(255,255,255,0.9) 0%,
+        rgba(255,255,255,0.9) ${pct}%,
+        rgba(255,255,255,0.2) ${pct}%,
+        rgba(255,255,255,0.2) 100%)`;
+}
+
+function initFullscreenControls() {
+    const overlay = document.getElementById('fullscreenArtOverlay');
+    if (!overlay) return;
+    
+    const fsVolumeSlider = overlay.querySelector('.fs-volume-slider');
+    if (fsVolumeSlider) {
+        fsVolumeSlider.addEventListener('input', () => {
+            const vol = Number(fsVolumeSlider.value);
+            updateAudioState({
+                volume: vol,
+                isMuted: vol === 0,
+                previousVolume: vol > 0 ? vol : audioState.previousVolume
+            });
+            updateFsVolumeFill(fsVolumeSlider);
+            // Also sync the mute icon
+            const fsMute = overlay.querySelector('.fs-mute-track');
+            if (fsMute) {
+                fsMute.style.backgroundImage = `url("${vol === 0 ? muteIcon : unmuteIcon}")`;
+            }
+        });
+        
+        fsVolumeSlider.addEventListener('change', () => {
+            const vol = Number(fsVolumeSlider.value);
+            updateAudioState({
+                volume: vol,
+                isMuted: vol === 0,
+                previousVolume: vol > 0 ? vol : audioState.previousVolume
+            }, { persistVolume: true });
+        });
+    }
+}
+
+// Close fullscreen art overlay with Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const overlay = document.getElementById('fullscreenArtOverlay');
+        if (overlay && !overlay.classList.contains('hidden')) {
+            toggleFullscreenArt();
+        }
+    }
+});
 
 function syncPlaylistQueuePosition() {
     if (!playlistQueue || playlistQueue.length === 0) {
@@ -247,6 +438,9 @@ function playTrack(){
         track_art.classList.add('spinning');
         track_art.classList.remove('spinning-paused');
     }
+    // Sync fullscreen play button
+    const fsPlayPause = document.querySelector('.fs-playpause-track');
+    if (fsPlayPause) fsPlayPause.style.backgroundImage = `url("${pauseIcon}")`;
 }
 
 function pauseTrack(){
@@ -258,9 +452,29 @@ function pauseTrack(){
         track_art.classList.add('spinning');
         track_art.classList.add('spinning-paused');
     }
+    // Sync fullscreen play button
+    const fsPlayPause = document.querySelector('.fs-playpause-track');
+    if (fsPlayPause) fsPlayPause.style.backgroundImage = `url("${playIcon}")`;
+}
+
+/**
+ * Handle track ended event - respects crossfade state
+ */
+function handleTrackEnded() {
+    // If crossfade is active, don't trigger normal next track
+    // The crossfade module will handle the transition
+    if (window.isCrossfadeActive && window.isCrossfadeActive()) {
+        return;
+    }
+    nextTrack();
 }
 
 function nextTrack(){
+    // Cancel any active crossfade when manually switching tracks
+    if (window.cancelCrossfade) {
+        window.cancelCrossfade();
+    }
+    
     // If loop individual is active, just replay the current track
     if (loopState === 2) {
         window._autoplayRequested = true;
@@ -304,6 +518,11 @@ function nextTrack(){
 }
 
 function prevTrack(){
+    // Cancel any active crossfade when manually switching tracks
+    if (window.cancelCrossfade) {
+        window.cancelCrossfade();
+    }
+    
     if (playlistQueue && playlistQueue.length > 0) {
         if (isRandom) {
             const random_index = Math.floor((Math.random() * playlistQueue.length));
@@ -376,6 +595,18 @@ function updateMuteButtonIcon() {
         audioState.isMuted || audioState.volume === 0
             ? `url("${muteIcon}")`
             : `url("${unmuteIcon}")`;
+    // Sync fullscreen mute button and volume slider
+    const fsMute = document.querySelector('.fs-mute-track');
+    const fsVolumeSlider = document.querySelector('.fs-volume-slider');
+    if (fsMute) {
+        fsMute.style.backgroundImage = audioState.isMuted || audioState.volume === 0
+            ? `url("${muteIcon}")`
+            : `url("${unmuteIcon}")`;
+    }
+    if (fsVolumeSlider) {
+        fsVolumeSlider.value = audioState.isMuted ? 0 : audioState.volume;
+        updateFsVolumeFill(fsVolumeSlider);
+    }
 }
 
 function setUpdate(){
@@ -405,7 +636,18 @@ function setUpdate(){
         total_duration.textContent = duration_minutes + ":" + duration_seconds;
     }
 
+    // Sync fullscreen time display
+    const fsCurrentTime = document.querySelector('.fs-current-time');
+    const fsTotalDuration = document.querySelector('.fs-total-duration');
+    if (fsCurrentTime) fsCurrentTime.textContent = curr_time.textContent;
+    if (fsTotalDuration) fsTotalDuration.textContent = total_duration.textContent;
+
     updateRangeFill(seek_slider);
+    
+    // Check for crossfade trigger
+    if (window.checkCrossfade) {
+        window.checkCrossfade(curr_track, track_index);
+    }
 }
 
 function repeatTrack(){
@@ -427,6 +669,9 @@ function randomTrack(){
 function updateShuffleIcon() {
     if (!randomIcon) return;
     randomIcon.style.backgroundImage = `url("${isRandom ? shuffleOnIcon : shuffleOffIcon}")`;
+    // Sync fullscreen shuffle button
+    const fsRandom = document.querySelector('.fs-random-track');
+    if (fsRandom) fsRandom.style.backgroundImage = `url("${isRandom ? shuffleOnIcon : shuffleOffIcon}")`;
 }
 
 function updateLoopIcon() {
@@ -443,6 +688,9 @@ function updateLoopIcon() {
             iconUrl = loopingIcon; // No loop
     }
     repeatIcon.style.backgroundImage = `url("${iconUrl}")`;
+    // Sync fullscreen repeat button
+    const fsRepeat = document.querySelector('.fs-repeat-track');
+    if (fsRepeat) fsRepeat.style.backgroundImage = `url("${iconUrl}")`;
 }
 
 // Load custom songs from database
@@ -668,7 +916,22 @@ export function initPlayer(autoPlay = false) {
         }
     });
 
+    // Initialize equalizer with the audio element
+    // Need to wait for user interaction to create AudioContext
+    const initEqOnInteraction = () => {
+        if (window.initEqualizer) {
+            window.initEqualizer(curr_track);
+        }
+        document.removeEventListener('click', initEqOnInteraction);
+        document.removeEventListener('keydown', initEqOnInteraction);
+    };
+    document.addEventListener('click', initEqOnInteraction, { once: true });
+    document.addEventListener('keydown', initEqOnInteraction, { once: true });
+
     rebuildPlaylistQueue();
+    
+    // Initialize fullscreen controls
+    initFullscreenControls();
 
 // Make functions globally accessible for onclick handlers
 window.randomTrack = randomTrack;
@@ -684,6 +947,7 @@ window.toggleMute = toggleMute;
 window.reloadSongsInPlayer = reloadSongsInPlayer;
 window.getPlayerSongs = () => music_list;
 window.setPlaylistQueue = setPlaylistQueue;
+window.toggleFullscreenArt = toggleFullscreenArt;
 window.playSongById = (songId, queueIds) => {
     if (queueIds) {
         setPlaylistQueue(queueIds);
@@ -695,5 +959,87 @@ window.playSongById = (songId, queueIds) => {
         window._autoplayRequested = true;
         loadTrack(track_index);
     }
+};
+
+// Crossfade swap handler - swaps audio elements when crossfade completes
+window._crossfadeSwapHandler = (newAudioElement, nextIndex) => {
+    if (!newAudioElement || nextIndex === undefined || nextIndex < 0 || nextIndex >= music_list.length) {
+        return;
+    }
+    
+    // Remove event listeners from old track
+    if (window._audioErrorHandler) {
+        curr_track.removeEventListener('error', window._audioErrorHandler);
+    }
+    if (window._audioCanplayHandler) {
+        curr_track.removeEventListener('canplay', window._audioCanplayHandler);
+    }
+    curr_track.removeEventListener('ended', handleTrackEnded);
+    
+    // Swap audio elements
+    const oldTrack = curr_track;
+    curr_track = newAudioElement;
+    
+    // Re-add event listeners to new track
+    curr_track.addEventListener('error', window._audioErrorHandler);
+    curr_track.addEventListener('canplay', window._audioCanplayHandler);
+    curr_track.removeEventListener('ended', handleTrackEnded);
+    curr_track.addEventListener('ended', handleTrackEnded);
+    
+    // Update track index
+    track_index = nextIndex;
+    syncPlaylistQueuePosition();
+    
+    // Update UI (track info) without reloading audio
+    const track = music_list[track_index];
+    if (track) {
+        track_name.textContent = track.name;
+        track_artist.textContent = track.artist;
+        now_playing.textContent = "Playing music " + (track_index + 1) + " of " + music_list.length;
+        
+        // Update track art
+        if (track.isCustom && track.imagePath) {
+            window.electronAPI.getImageFile(track.imagePath).then(result => {
+                if (result.success) {
+                    const binaryString = atob(result.data);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    const blob = new Blob([bytes], { type: 'image/jpeg' });
+                    const blobUrl = URL.createObjectURL(blob);
+                    track_art.style.backgroundImage = `url("${blobUrl}")`;
+                    syncFullscreenArt();
+                } else {
+                    track_art.style.backgroundImage = `url("${discImg}")`;
+                }
+            }).catch(() => {
+                track_art.style.backgroundImage = `url("${discImg}")`;
+            });
+        } else {
+            track_art.style.backgroundImage = `url("${discImg}")`;
+            syncFullscreenArt();
+        }
+    }
+    
+    // Update play state
+    isPlaying = true;
+    playpause_btn.style.backgroundImage = `url("${pauseIcon}")`;
+    wave.classList.add('loader');
+    if (track_art) {
+        track_art.classList.add('spinning');
+        track_art.classList.remove('spinning-paused');
+    }
+    
+    // Sync fullscreen play button
+    const fsPlayPause = document.querySelector('.fs-playpause-track');
+    if (fsPlayPause) fsPlayPause.style.backgroundImage = `url("${pauseIcon}")`;
+    
+    // Initialize equalizer on new audio element if needed
+    if (window.initEqualizer) {
+        window.initEqualizer(curr_track);
+    }
+    
+    console.log('✓ Crossfade swap complete, now playing:', track?.name);
 };
 }

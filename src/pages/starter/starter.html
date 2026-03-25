@@ -26,13 +26,28 @@
                 <button type="button" class="starter-secondary" onclick="closeCreatePlaylistModal()">Cancel</button>
             </div>
             <div class="tab-panel" id="playlistTabPanelYoutube">
-                <label for="youtubePlaylistUrl">YouTube Playlist URL</label>
+<label for="youtubePlaylistUrl">YouTube Playlist URL</label>
                 <div class="yt-url-row">
-                    <input type="text" id="youtubePlaylistUrl" placeholder="https://www.youtube.com/playlist?list=...">
-                    <button type="button" class="starter-primary" onclick="loadYoutubePlaylist()">Load</button>
+                    <input type="text" id="youtubePlaylistUrl" placeholder="https://youtube.com/playlist?list=... or music.youtube.com" spellcheck="false">
+                    <button type="button" class="starter-primary" id="ytPlaylistLoadBtn" onclick="loadYoutubePlaylistInfo()">Load</button>
                 </div>
                 <div id="youtubePlaylistPreview" class="yt-preview hidden"></div>
-                <button type="button" class="starter-primary" onclick="importYoutubePlaylist()">Import Playlist</button>
+                <div id="youtubePlaylistEditFields" class="hidden">
+                    <label for="ytPlaylistName">Playlist Name</label>
+                    <input type="text" id="ytPlaylistName" placeholder="Defaults to YouTube playlist title">
+                </div>
+                <div id="youtubePlaylistProgress" class="yt-progress hidden">
+                    <div class="yt-progress-header">
+                        <span id="ytProgressTitle">Downloading...</span>
+                        <span id="ytProgressCount">0/0</span>
+                    </div>
+                    <div class="yt-progress-bar-container">
+                        <div id="ytProgressBar" class="yt-progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div id="ytProgressLog" class="yt-progress-log"></div>
+                </div>
+                <div id="youtubePlaylistStatus" class="yt-status hidden"></div>
+                <button type="button" class="starter-primary" id="ytPlaylistImportBtn" onclick="importYoutubePlaylistSongs()" disabled>Import Playlist</button>
                 <button type="button" class="starter-secondary" onclick="closeCreatePlaylistModal()">Cancel</button>
             </div>
         </form>

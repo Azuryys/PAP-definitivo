@@ -1,0 +1,221 @@
+/* =============================================
+   SETUP PAGE STYLES
+   ============================================= */
+
+#setupPage {
+    display: none !important;
+    width: 100%;
+    min-height: 100vh;
+}
+
+#setupPage.active {
+    display: flex !important;
+}
+
+.setup-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+.setup-content {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 600px;
+    width: 100%;
+    padding: 50px 40px;
+}
+
+.setup-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.setup-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 8px;
+}
+
+.setup-subtitle {
+    font-size: 16px;
+    color: #666;
+    margin: 0;
+}
+
+.setup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.setup-section {
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border-left: 4px solid #667eea;
+}
+
+.setup-step {
+    display: flex;
+    gap: 16px;
+}
+
+.step-number {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    background: #667eea;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.step-content {
+    flex: 1;
+}
+
+.step-content h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0 0 4px;
+}
+
+.step-description {
+    font-size: 14px;
+    color: #666;
+    margin: 0 0 16px;
+}
+
+.folder-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-select-folder {
+    padding: 12px 16px;
+    background: white;
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    color: #667eea;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-select-folder:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-select-folder:active {
+    transform: translateY(0);
+}
+
+.folder-display {
+    padding: 10px 12px;
+    background: white;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #666;
+    word-break: break-all;
+    min-height: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.folder-display.selected {
+    color: #2ecc71;
+    font-weight: 500;
+}
+
+.setup-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.btn-complete-setup {
+    flex: 1;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-complete-setup:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-complete-setup:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.setup-error {
+    padding: 12px 14px;
+    background: #fee;
+    border-left: 4px solid #f55;
+    border-radius: 4px;
+    color: #c33;
+    font-size: 14px;
+}
+
+/* ── Folder detection badge ───────────────────────────── */
+.folder-detection-badge {
+  margin-top: 6px;
+  padding: 6px 12px;
+  background: rgba(46, 204, 113, 0.12);
+  color: #2ecc71;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+@media (max-width: 600px) {
+    .setup-content {
+        padding: 30px 20px;
+    }
+
+    .setup-header h1 {
+        font-size: 24px;
+    }
+
+    .setup-section {
+        padding: 16px;
+    }
+
+    .step-number {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+    }
+
+    .step-content h2 {
+        font-size: 16px;
+    }
+}

@@ -1,0 +1,905 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   PLUGINS PAGE & PLUGIN STYLES
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#pluginsPage {
+  display: none;
+  width: 100%;
+  min-height: 100vh;
+}
+
+#pluginsPage.active {
+  display: flex !important;
+}
+
+.plugins-container {
+  width: 100%;
+  min-height: 100vh;
+  padding: 40px clamp(20px, 5vw, 60px);
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.plugins-subtitle {
+  margin: -16px 0 8px 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Plugin Card */
+.plugin-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 24px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.plugin-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.plugin-card-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.plugin-icon {
+  font-size: 32px;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(124, 92, 255, 0.2), rgba(34, 211, 238, 0.15));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.plugin-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.plugin-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: var(--text);
+}
+
+.plugin-description {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Plugin Panel (when expanded) */
+.plugin-card .plugin-panel {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.plugin-card .plugin-panel.hidden {
+  display: none;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .plugins-container {
+    padding: 24px 16px;
+  }
+
+  .plugin-card {
+    padding: 18px;
+  }
+
+  .plugin-card-header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .plugin-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 26px;
+  }
+
+  .plugin-info {
+    flex: 1 1 calc(100% - 110px);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PLUGIN COMMON STYLES
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Plugin Feature Container ─────────────────────────────────────────────── */
+.plugin-feature {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.plugin-feature-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.plugin-feature-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.plugin-feature-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ── Toggle Switch ────────────────────────────────────────────────────────── */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.12);
+  transition: 0.3s;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+
+/* ── Plugin Panel ─────────────────────────────────────────────────────────── */
+.plugin-panel {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.plugin-panel.hidden {
+  display: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   EQUALIZER STYLES
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Preset Row */
+.eq-preset-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.eq-preset-row label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  min-width: 50px;
+}
+
+.eq-select {
+  flex: 1;
+  max-width: 200px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.eq-select:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.eq-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.2);
+}
+
+.eq-select option {
+  background: #1a1a2e;
+  color: var(--text);
+}
+
+/* Section Titles */
+.eq-section-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin: 0 0 12px 0;
+  font-weight: 600;
+}
+
+/* Quick Effects Section */
+.eq-effects-section {
+  margin-bottom: 24px;
+}
+
+.eq-effect-sliders {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.eq-effect-slider {
+  display: grid;
+  grid-template-columns: 100px 1fr 60px;
+  align-items: center;
+  gap: 12px;
+}
+
+.eq-effect-slider label {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.eq-effect-slider input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  outline: none;
+  cursor: pointer;
+}
+
+.eq-effect-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(124, 92, 255, 0.4);
+  transition: transform 0.15s ease;
+}
+
+.eq-effect-slider input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.eq-effect-slider input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 6px rgba(124, 92, 255, 0.4);
+}
+
+.eq-effect-value {
+  font-size: 12px;
+  color: var(--accent-2);
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Equalizer Bands Section */
+.eq-bands-section {
+  margin-bottom: 20px;
+}
+
+.eq-bands-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 24px 16px;
+  background: linear-gradient(180deg, rgba(15, 25, 45, 0.9) 0%, rgba(10, 18, 32, 0.95) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 8px;
+}
+
+.eq-band {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 30px;
+}
+
+/* Wrapper for vertical slider to control gradient fill */
+.eq-band-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 6px;
+  height: 120px;
+  background: transparent;
+  outline: none;
+  cursor: pointer;
+  border-radius: 3px;
+  writing-mode: vertical-lr;
+  direction: rtl;
+}
+
+/* Track styling */
+.eq-band-slider::-webkit-slider-runnable-track {
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(to bottom, 
+    #22d3ee 0%,
+    #67e8f9 15%,
+    #a5b4fc 35%,
+    #c084fc 50%,
+    #e879f9 65%,
+    #f472b6 80%,
+    #fb7185 100%
+  );
+  border-radius: 3px;
+  border: none;
+}
+
+.eq-band-slider::-moz-range-track {
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(to bottom, 
+    #22d3ee 0%,
+    #67e8f9 15%,
+    #a5b4fc 35%,
+    #c084fc 50%,
+    #e879f9 65%,
+    #f472b6 80%,
+    #fb7185 100%
+  );
+  border-radius: 3px;
+  border: none;
+}
+
+/* Thumb styling */
+.eq-band-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #f472b6, #db2777);
+  cursor: pointer;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 
+    0 0 10px rgba(244, 114, 182, 0.6),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  margin-left: -5px;
+}
+
+.eq-band-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 
+    0 0 16px rgba(244, 114, 182, 0.8),
+    0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+.eq-band-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #f472b6, #db2777);
+  cursor: pointer;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 
+    0 0 10px rgba(244, 114, 182, 0.6),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.eq-band-slider::-moz-range-thumb:hover {
+  transform: scale(1.15);
+}
+
+.eq-band-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* dB labels on the side */
+.eq-bands-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 16px 0;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.eq-bands-labels span:first-child { color: #22d3ee; }
+.eq-bands-labels span:nth-child(2) { color: var(--muted); }
+.eq-bands-labels span:last-child { color: #f472b6; }
+
+/* Actions */
+.eq-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+}
+
+/* ── Responsive Adjustments for Equalizer ─────────────────────────────────── */
+@media (max-width: 600px) {
+  .eq-effect-slider {
+    grid-template-columns: 80px 1fr 50px;
+    gap: 8px;
+  }
+  
+  .eq-band-slider {
+    height: 90px;
+  }
+  
+  .eq-bands-container {
+    padding: 18px 8px;
+    gap: 4px;
+  }
+  
+  .eq-band-label {
+    font-size: 9px;
+  }
+  
+  .eq-band-slider::-webkit-slider-thumb {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .eq-preset-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .eq-select {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SLEEP TIMER STYLES
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Sleep Timer Panel ────────────────────────────────────────────────────── */
+.sleep-timer-section {
+  margin-bottom: 20px;
+}
+
+.sleep-timer-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.sleep-timer-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sleep-timer-input {
+  width: 100px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.sleep-timer-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sleep-timer-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sleep-timer-unit {
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* ── Sleep Timer Presets ──────────────────────────────────────────────────── */
+.sleep-preset-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sleep-preset-btn {
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sleep-preset-btn:hover {
+  background: rgba(124, 92, 255, 0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.sleep-preset-btn:active {
+  transform: scale(0.96);
+}
+
+/* ── Sleep Timer Display ──────────────────────────────────────────────────── */
+.sleep-timer-display-section {
+  text-align: center;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.sleep-timer-display-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.sleep-timer-display-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sleep-timer-display {
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  letter-spacing: 0.05em;
+}
+
+.sleep-timer-status {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 12px;
+}
+
+.sleep-timer-status.active {
+  color: var(--accent-2);
+  font-weight: 500;
+}
+
+/* ── Sleep Timer Actions ──────────────────────────────────────────────────── */
+.sleep-timer-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SLEEP OVERLAY (Screen Dimming)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.sleep-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(2px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+  pointer-events: none;
+}
+
+.sleep-overlay.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.sleep-overlay.completing {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+/* ── Sleep Overlay Timer Badge ────────────────────────────────────────────── */
+.sleep-overlay-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 60px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  backdrop-filter: blur(20px);
+}
+
+.sleep-overlay-icon {
+  font-size: 48px;
+  filter: grayscale(20%);
+}
+
+#sleepOverlayTime {
+  font-size: 72px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', monospace;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 30px rgba(124, 92, 255, 0.3);
+}
+
+.sleep-overlay-cancel {
+  padding: 12px 32px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sleep-overlay-cancel:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+
+/* ── Sleep Complete Message ───────────────────────────────────────────────── */
+.sleep-complete-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 60px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  backdrop-filter: blur(20px);
+  animation: sleepFadeIn 0.5s ease;
+}
+
+.sleep-complete-icon {
+  font-size: 64px;
+}
+
+.sleep-complete-message span:last-child {
+  font-size: 20px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+@keyframes sleepFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ── Responsive Adjustments for Sleep Timer ───────────────────────────────── */
+@media (max-width: 600px) {
+  .sleep-preset-buttons {
+    gap: 6px;
+  }
+  
+  .sleep-preset-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  .sleep-timer-display {
+    font-size: 36px;
+  }
+  
+  #sleepOverlayTime {
+    font-size: 48px;
+  }
+  
+  .sleep-overlay-timer {
+    padding: 30px 40px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CROSSFADE PLUGIN STYLES
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Crossfade Section ────────────────────────────────────────────────────── */
+.crossfade-section {
+  margin-bottom: 20px;
+}
+
+.crossfade-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.crossfade-hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+/* ── Crossfade Slider ─────────────────────────────────────────────────────── */
+.crossfade-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.crossfade-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  outline: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.crossfade-slider:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.crossfade-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(124, 92, 255, 0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.crossfade-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 3px 12px rgba(124, 92, 255, 0.5);
+}
+
+.crossfade-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(124, 92, 255, 0.4);
+}
+
+.crossfade-value {
+  min-width: 80px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+}
+
+/* ── Crossfade Presets ────────────────────────────────────────────────────── */
+.crossfade-preset-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.crossfade-preset-btn {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.crossfade-preset-btn:hover {
+  background: rgba(124, 92, 255, 0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.crossfade-preset-btn:active {
+  transform: scale(0.96);
+}
+
+/* ── Crossfade Info ───────────────────────────────────────────────────────── */
+.crossfade-info {
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  border-left: 3px solid var(--accent);
+}
+
+.crossfade-info p {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+}

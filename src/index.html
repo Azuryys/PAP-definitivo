@@ -184,6 +184,246 @@
                    <p id="backupStatus" class="settings-backup-status" style="display:none;"></p>
                </div>
            </div>
+
+           <!-- Plugins Link -->
+           <div class="settings-card">
+               <div class="settings-card-header">
+                   <div class="settings-card-icon">🔌</div>
+                   <div>
+                       <h2 class="settings-card-title">Plugins</h2>
+                       <p class="settings-card-description">Enhance your audio experience with equalizer and more.</p>
+                   </div>
+               </div>
+               <div class="settings-card-body">
+                   <button type="button" id="openPluginsBtn" class="settings-action-btn primary" onclick="goToPlugins()">
+                       🔌 Open Plugins
+                   </button>
+               </div>
+           </div>
+       </div>
+   </div>
+
+   <!-- Plugins Page -->
+   <div id="pluginsPage" class="page">
+       <div class="plugins-container">
+           <button class="settings-back-btn" type="button" onclick="goBackFromPlugins()">
+               <span class="settings-back-arrow">←</span>
+               Back to music
+           </button>
+
+           <h1 class="settings-title">Plugins</h1>
+           <p class="plugins-subtitle">Enhance your audio experience with additional features</p>
+
+           <!-- Equalizer Plugin -->
+           <div class="plugin-card">
+               <div class="plugin-card-header">
+                   <div class="plugin-icon">🎚️</div>
+                   <div class="plugin-info">
+                       <h2 class="plugin-title">Equalizer</h2>
+                       <p class="plugin-description">Fine-tune your audio with a 10-band graphic equalizer and presets</p>
+                   </div>
+                   <label class="toggle-switch">
+                       <input type="checkbox" id="equalizerToggle">
+                       <span class="toggle-slider"></span>
+                   </label>
+               </div>
+
+               <div id="equalizerPanel" class="plugin-panel hidden">
+                   <!-- Preset Selector -->
+                   <div class="eq-preset-row">
+                       <label for="eqPresetSelect">Preset</label>
+                       <select id="eqPresetSelect" class="eq-select">
+                           <option value="flat">Flat</option>
+                           <option value="rock">Rock</option>
+                           <option value="pop">Pop</option>
+                           <option value="jazz">Jazz</option>
+                           <option value="classical">Classical</option>
+                           <option value="bass-boost">Bass Boost</option>
+                           <option value="treble-boost">Treble Boost</option>
+                           <option value="vocal">Vocal</option>
+                           <option value="electronic">Electronic</option>
+                           <option value="acoustic">Acoustic</option>
+                           <option value="custom">Custom</option>
+                       </select>
+                   </div>
+
+                   <!-- Quick Effects -->
+                   <div class="eq-effects-section">
+                       <h4 class="eq-section-title">Quick Effects</h4>
+                       <div class="eq-effect-sliders">
+                           <div class="eq-effect-slider">
+                               <label>Bass Boost</label>
+                               <input type="range" id="eqBassBoost" min="0" max="12" value="0" step="1">
+                               <span class="eq-effect-value" id="eqBassBoostValue">0 dB</span>
+                           </div>
+                           <div class="eq-effect-slider">
+                               <label>Treble Boost</label>
+                               <input type="range" id="eqTrebleBoost" min="0" max="12" value="0" step="1">
+                               <span class="eq-effect-value" id="eqTrebleBoostValue">0 dB</span>
+                           </div>
+                       </div>
+                   </div>
+
+                   <!-- Graphical EQ -->
+                   <div class="eq-bands-section">
+                       <h4 class="eq-section-title">Equalizer Bands</h4>
+                       <div class="eq-bands-container">
+                           <div class="eq-band">
+                               <input type="range" id="eqBand32" class="eq-band-slider" min="-12" max="12" value="0" step="1">
+                               <span class="eq-band-label">32</span>
+                           </div>
+                           <div class="eq-band">
+                               <input type="range" id="eqBand64" class="eq-band-slider" min="-12" max="12" value="0" step="1">
+                               <span class="eq-band-label">64</span>
+                           </div>
+                           <div class="eq-band">
+                               <input type="range" id="eqBand125" class="eq-band-slider" min="-12" max="12" value="0" step="1">
+                               <span class="eq-band-label">125</span>
+                           </div>
+                           <div class="eq-band">
+                               <input type="range" id="eqBand250" class="eq-band-slider" min="-12" max="12" value="0" step="1">
+                               <span class="eq-band-label">250</span>
+                           </div>
+                           <div class="eq-band">
+                               <input type="range" id="eqBand500" class="eq-band-slider" min="-12" max="12" value="0" step="1">
+                               <span class="eq-band-label">500</span>
+                           </div>
+                           <div class="eq-band">
+                               <input type="range" id="eqBand1k" class="eq-band-slider" min="-12" max="12" value="0" step="1">
+                               <span class="eq-band-label">1K</span>
+                           </div>
+                           <div class="eq-band">
+                               <input type="range" id="eqBand2k" class="eq-band-slider" min="-12" max="12" value="0" step="1">
+                               <span class="eq-band-label">2K</span>
+                           </div>
+                           <div class="eq-band">
+                               <input type="range" id="eqBand4k" class="eq-band-slider" min="-12" max="12" value="0" step="1">
+                               <span class="eq-band-label">4K</span>
+                           </div>
+                           <div class="eq-band">
+                               <input type="range" id="eqBand8k" class="eq-band-slider" min="-12" max="12" value="0" step="1">
+                               <span class="eq-band-label">8K</span>
+                           </div>
+                           <div class="eq-band">
+                               <input type="range" id="eqBand16k" class="eq-band-slider" min="-12" max="12" value="0" step="1">
+                               <span class="eq-band-label">16K</span>
+                           </div>
+                       </div>
+                       <div class="eq-bands-labels">
+                           <span>+12 dB</span>
+                           <span>0 dB</span>
+                           <span>-12 dB</span>
+                       </div>
+                   </div>
+
+                   <!-- Reset Button -->
+                   <div class="eq-actions">
+                       <button type="button" id="eqResetBtn" class="settings-action-btn">Reset to Flat</button>
+                   </div>
+               </div>
+           </div>
+
+           <!-- Sleep Timer Plugin -->
+           <div class="plugin-card">
+               <div class="plugin-card-header">
+                   <div class="plugin-icon">🌙</div>
+                   <div class="plugin-info">
+                       <h2 class="plugin-title">Sleep Timer</h2>
+                       <p class="plugin-description">Automatically pause music after a set duration with screen dimming</p>
+                   </div>
+                   <label class="toggle-switch">
+                       <input type="checkbox" id="sleepTimerToggle">
+                       <span class="toggle-slider"></span>
+                   </label>
+               </div>
+
+               <div id="sleepTimerPanel" class="plugin-panel hidden">
+                   <!-- Timer Duration -->
+                   <div class="sleep-timer-section">
+                       <label for="sleepTimerDuration" class="sleep-timer-label">Timer Duration (minutes)</label>
+                       <div class="sleep-timer-input-row">
+                           <input type="number" id="sleepTimerDuration" class="sleep-timer-input" min="1" max="180" value="30">
+                           <span class="sleep-timer-unit">min</span>
+                       </div>
+                   </div>
+
+                   <!-- Quick Presets -->
+                   <div class="sleep-timer-section">
+                       <label class="sleep-timer-label">Quick Presets</label>
+                       <div class="sleep-preset-buttons">
+                           <button type="button" class="sleep-preset-btn" data-minutes="15">15 min</button>
+                           <button type="button" class="sleep-preset-btn" data-minutes="30">30 min</button>
+                           <button type="button" class="sleep-preset-btn" data-minutes="45">45 min</button>
+                           <button type="button" class="sleep-preset-btn" data-minutes="60">1 hour</button>
+                           <button type="button" class="sleep-preset-btn" data-minutes="90">1.5 hours</button>
+                           <button type="button" class="sleep-preset-btn" data-minutes="120">2 hours</button>
+                       </div>
+                   </div>
+
+                   <!-- Timer Display -->
+                   <div class="sleep-timer-display-section">
+                       <div class="sleep-timer-display-wrapper">
+                           <span class="sleep-timer-display-label">Time Remaining</span>
+                           <span id="sleepTimerDisplay" class="sleep-timer-display">00:00</span>
+                       </div>
+                       <p id="sleepTimerStatus" class="sleep-timer-status">Set a duration and start the timer</p>
+                   </div>
+
+                   <!-- Action Buttons -->
+                   <div class="sleep-timer-actions">
+                       <button type="button" id="sleepTimerStartBtn" class="settings-action-btn primary">
+                           Start Timer
+                       </button>
+                       <button type="button" id="sleepTimerCancelBtn" class="settings-action-btn danger" style="display: none;">
+                           Cancel Timer
+                       </button>
+                   </div>
+               </div>
+           </div>
+
+           <!-- Crossfade Plugin -->
+           <div class="plugin-card">
+               <div class="plugin-card-header">
+                   <div class="plugin-icon">🔀</div>
+                   <div class="plugin-info">
+                       <h2 class="plugin-title">Crossfade</h2>
+                       <p class="plugin-description">Smooth transitions between songs with fade out/fade in effect</p>
+                   </div>
+                   <label class="toggle-switch">
+                       <input type="checkbox" id="crossfadeToggle">
+                       <span class="toggle-slider"></span>
+                   </label>
+               </div>
+
+               <div id="crossfadePanel" class="plugin-panel hidden">
+                   <!-- Crossfade Duration -->
+                   <div class="crossfade-section">
+                       <label for="crossfadeDuration" class="crossfade-label">Crossfade Duration</label>
+                       <p class="crossfade-hint">How many seconds before the song ends to start fading</p>
+                       <div class="crossfade-slider-row">
+                           <input type="range" id="crossfadeDuration" class="crossfade-slider" min="1" max="15" value="5" step="1">
+                           <span id="crossfadeDurationDisplay" class="crossfade-value">5 seconds</span>
+                       </div>
+                   </div>
+
+                   <!-- Quick Presets -->
+                   <div class="crossfade-section">
+                       <label class="crossfade-label">Quick Presets</label>
+                       <div class="crossfade-preset-buttons">
+                           <button type="button" class="crossfade-preset-btn" data-seconds="3">3s</button>
+                           <button type="button" class="crossfade-preset-btn" data-seconds="5">5s</button>
+                           <button type="button" class="crossfade-preset-btn" data-seconds="8">8s</button>
+                           <button type="button" class="crossfade-preset-btn" data-seconds="10">10s</button>
+                           <button type="button" class="crossfade-preset-btn" data-seconds="12">12s</button>
+                       </div>
+                   </div>
+
+                   <!-- Info -->
+                   <div class="crossfade-info">
+                       <p>When enabled, the current song will fade out and the next song will fade in during the last few seconds of playback, creating a smooth DJ-like transition.</p>
+                   </div>
+               </div>
+           </div>
        </div>
    </div>
 
@@ -217,6 +457,10 @@
                            <span>Add song</span>
                        </button>
                        <div class="settings-dropdown-divider"></div>
+                       <button class="settings-dropdown-item" data-action="plugins">
+                           <span class="settings-item-icon">🔌</span>
+                           <span>Plugins</span>
+                       </button>
                        <button class="settings-dropdown-item" data-action="settings">
                            <span class="settings-item-icon">⚙️</span>
                            <span>Settings</span>
@@ -294,6 +538,11 @@
                <div class="current-time">00:00</div>
                <span class="time-sep">/</span>
                <div class="total-duration">00:00</div>
+               <div class="fullscreen-art-btn" onclick="toggleFullscreenArt()" title="Fullscreen album art">
+                   <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                       <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                   </svg>
+               </div>
                <div class="volume-group">
                    <div class="mute-track"></div>
                    <input type="range" min="0" max="100" value="99" class="volume_slider">
@@ -304,6 +553,41 @@
                    <span class="stroke"></span>
                    <span class="stroke"></span>
                    <span class="stroke"></span>
+               </div>
+           </div>
+       </div>
+   </div>
+
+   <!-- Fullscreen Album Art Overlay -->
+   <div id="fullscreenArtOverlay" class="fullscreen-art-overlay hidden">
+       <div class="fullscreen-art-bg"></div>
+       <div class="fullscreen-art-content">
+           <button class="fullscreen-art-close fs-fade-on-idle" onclick="toggleFullscreenArt()" title="Close">
+               <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                   <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>
+               </svg>
+           </button>
+           <div class="fullscreen-art-time fs-fade-on-idle">
+               <span class="fs-current-time">00:00</span>
+               <span class="fs-time-sep">/</span>
+               <span class="fs-total-duration">00:00</span>
+           </div>
+           <div class="fullscreen-art-image"></div>
+           <div class="fullscreen-art-info">
+               <div class="fullscreen-art-title">Track Name</div>
+               <div class="fullscreen-art-artist">Track Artist</div>
+           </div>
+           <div class="fullscreen-art-controls fs-fade-on-idle">
+               <div class="fullscreen-art-buttons">
+                   <div class="fs-random-track" onclick="randomTrack()" title="Shuffle"></div>
+                   <div class="fs-prev-track" onclick="prevTrack()" title="Previous"></div>
+                   <div class="fs-playpause-track" onclick="playpauseTrack()" title="Play/Pause"></div>
+                   <div class="fs-next-track" onclick="nextTrack()" title="Next"></div>
+                   <div class="fs-repeat-track" onclick="repeatTrack()" title="Repeat"></div>
+               </div>
+               <div class="fullscreen-art-volume">
+                   <div class="fs-mute-track" onclick="toggleMute()" title="Mute"></div>
+                   <input type="range" min="0" max="100" value="99" class="fs-volume-slider">
                </div>
            </div>
        </div>
@@ -460,17 +744,49 @@
                    <div class="form-group">
                        <label for="youtubePlaylistUrl">YouTube Playlist URL</label>
                        <div class="yt-url-row">
-                           <input type="text" id="youtubePlaylistUrl" placeholder="https://www.youtube.com/playlist?list=...">
-                           <button type="button" class="btn-submit" onclick="loadYoutubePlaylist()">Load</button>
+                           <input type="text" id="youtubePlaylistUrl" placeholder="https://youtube.com/playlist?list=... or music.youtube.com" spellcheck="false">
+                           <button type="button" class="btn-submit" id="ytPlaylistLoadBtn" onclick="loadYoutubePlaylistInfo()">Load</button>
                        </div>
                    </div>
                    <div id="youtubePlaylistPreview" class="yt-preview hidden"></div>
+                   <div id="youtubePlaylistEditFields" class="hidden">
+                       <div class="form-group">
+                           <label for="ytPlaylistName">Playlist Name</label>
+                           <input type="text" id="ytPlaylistName" placeholder="Defaults to YouTube playlist title">
+                       </div>
+                   </div>
+                   <div id="youtubePlaylistProgress" class="yt-progress hidden">
+                       <div class="yt-progress-header">
+                           <span id="ytProgressTitle">Downloading...</span>
+                           <span id="ytProgressCount">0/0</span>
+                       </div>
+                       <div class="yt-progress-bar-container">
+                           <div id="ytProgressBar" class="yt-progress-bar" style="width: 0%"></div>
+                       </div>
+                       <div id="ytProgressLog" class="yt-progress-log"></div>
+                   </div>
+                   <div id="youtubePlaylistStatus" class="yt-status hidden"></div>
                    <div class="form-buttons">
                        <button type="button" class="btn-cancel" onclick="closeCreatePlaylistModal()">Cancel</button>
-                       <button type="button" class="btn-submit" onclick="importYoutubePlaylist()">Import Playlist</button>
+                       <button type="button" class="btn-submit" id="ytPlaylistImportBtn" onclick="importYoutubePlaylistSongs()" disabled>Import Playlist</button>
                    </div>
                </div>
            </form>
+       </div>
+   </div>
+
+   <!-- Add to Playlist Modal -->
+   <div id="addToPlaylistModal" class="modal">
+       <div class="modal-content" style="max-width: 400px;">
+           <span class="close" onclick="closeAddToPlaylistModal()">&times;</span>
+           <h2>Add to Playlist</h2>
+           <p id="addToPlaylistSongName" style="color: #aaa; margin-bottom: 16px; font-size: 14px;"></p>
+           <div id="addToPlaylistList" class="add-to-playlist-list">
+               <!-- Playlists will be rendered here -->
+           </div>
+           <div class="form-buttons" style="margin-top: 16px;">
+               <button type="button" class="btn-cancel" onclick="closeAddToPlaylistModal()">Cancel</button>
+           </div>
        </div>
    </div>
 </body>

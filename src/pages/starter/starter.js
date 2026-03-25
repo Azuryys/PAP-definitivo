@@ -50,6 +50,9 @@ function handleSettingsAction(action) {
         case 'add-song':
             openAddSongModal();
             break;
+        case 'plugins':
+            if (window.goToPlugins) window.goToPlugins();
+            break;
         case 'settings':
             if (window.goToSettings) window.goToSettings();
             break;
@@ -445,8 +448,7 @@ function handleSongMenuAction(action, song, queueIds) {
             }
             break;
         case 'add-to-playlist':
-            console.log('Add to playlist:', song.name);
-            alert('Add to playlist - Coming soon!');
+            openAddToPlaylistModal(song);
             break;
         case 'share':
             console.log('Share:', song.name);
@@ -494,7 +496,6 @@ async function handleCreatePlaylist(event) {
     const nameInput = document.getElementById('playlistName');
     const coverInput = document.getElementById('playlistCover');
     const descriptionInput = document.getElementById('playlistDescription');
-    const ytPlaylistInput = document.getElementById('youtubePlaylistUrl');
 
     if (!nameInput) return;
     const name = nameInput.value.trim();
@@ -521,26 +522,6 @@ async function handleCreatePlaylist(event) {
         songs: [],
         system: false
     };
-
-    // Download YouTube playlist if URL is provided
-    const ytPlaylistUrl = ytPlaylistInput?.value?.trim();
-    if (ytPlaylistUrl) {
-        try {
-            // IPC call to main process to download all videos in playlist
-            const result = await window.electronAPI.downloadYoutubePlaylist({
-                playlistUrl: ytPlaylistUrl,
-                playlistId: playlist.id,
-                playlistName: playlist.name
-            });
-            if (result.success && Array.isArray(result.songIds)) {
-                playlist.songs = result.songIds;
-            } else {
-                alert('Failed to download YouTube playlist: ' + (result.message || 'Unknown error'));
-            }
-        } catch (err) {
-            alert('Error downloading YouTube playlist: ' + err.message);
-        }
-    }
 
     const playlists = loadPlaylists();
     playlists.push(playlist);
@@ -1003,6 +984,126 @@ async function handleSpotifyDownload() {
     }
 }
 
+// Add to Playlist Modal Functions
+let _addToPlaylistSong = null;
+
+function openAddToPlaylistModal(song) {
+    _addToPlaylistSong = song;
+    const modal = document.getElementById('addToPlaylistModal');
+    const songNameEl = document.getElementById('addToPlaylistSongName');
+    const listEl = document.getElementById('addToPlaylistList');
+
+    if (!modal || !listEl) {
+        console.error('Add to Playlist modal not found');
+        return;
+    }
+
+    // Show the song name being added
+    if (songNameEl) {
+        songNameEl.textContent = `"${song.name}" by ${song.artist || 'Unknown Artist'}`;
+    }
+
+    // Get all playlists except "All Songs" (system playlists)
+    const playlists = loadPlaylists().filter(p => !p.system);
+
+    // Render the playlist list
+    listEl.innerHTML = '';
+
+    if (playlists.length === 0) {
+        listEl.innerHTML = '<p style="color: #888; text-align: center; padding: 20px;">No playlists available. Create a playlist first!</p>';
+    } else {
+        playlists.forEach(playlist => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'add-to-playlist-item';
+            
+            // Check if song is already in this playlist
+            const isInPlaylist = playlist.songs && playlist.songs.includes(song.id);
+            if (isInPlaylist) {
+                button.classList.add('already-added');
+            }
+
+            const dot = document.createElement('span');
+            dot.className = 'add-to-playlist-dot';
+            if (playlist.cover) {
+                dot.style.backgroundImage = `url("${playlist.cover}")`;
+                dot.style.backgroundSize = 'cover';
+                dot.style.backgroundPosition = 'center';
+            }
+
+            const textContainer = document.createElement('div');
+            textContainer.className = 'add-to-playlist-text';
+            
+            const title = document.createElement('strong');
+            title.textContent = playlist.name;
+            
+            const songCount = document.createElement('span');
+            songCount.textContent = `${playlist.songs?.length || 0} songs`;
+
+            textContainer.appendChild(title);
+            textContainer.appendChild(songCount);
+
+            const statusIcon = document.createElement('span');
+            statusIcon.className = 'add-to-playlist-status';
+            statusIcon.textContent = isInPlaylist ? '✓' : '+';
+
+            button.appendChild(dot);
+            button.appendChild(textContainer);
+            button.appendChild(statusIcon);
+
+            button.addEventListener('click', () => {
+                if (!isInPlaylist) {
+                    addSongToPlaylist(song.id, playlist.id);
+                    closeAddToPlaylistModal();
+                }
+            });
+
+            listEl.appendChild(button);
+        });
+    }
+
+    modal.style.display = 'block';
+}
+
+function closeAddToPlaylistModal() {
+    const modal = document.getElementById('addToPlaylistModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    _addToPlaylistSong = null;
+}
+
+function addSongToPlaylist(songId, playlistId) {
+    const playlists = loadPlaylists();
+    const playlist = getPlaylistById(playlists, playlistId);
+
+    if (!playlist) {
+        console.error('Playlist not found:', playlistId);
+        return false;
+    }
+
+    if (!playlist.songs) {
+        playlist.songs = [];
+    }
+
+    // Check if song is already in playlist
+    if (playlist.songs.includes(songId)) {
+        console.log('Song already in playlist');
+        return false;
+    }
+
+    playlist.songs.push(songId);
+    savePlaylists(playlists);
+    console.log(`✓ Song ${songId} added to playlist "${playlist.name}"`);
+
+    // Refresh the UI if the active playlist is the one we just added to
+    if (activePlaylistId === playlistId) {
+        renderPlaylistSongs(playlist);
+    }
+
+    return true;
+}
+
 window.openAddSongModal = openAddSongModal;
 window.closeAddSongModal = closeAddSongModal;
 window.handleAddSong = handleAddSong;
@@ -1015,5 +1116,12 @@ window.handleYoutubeLoad = handleYoutubeLoad;
 window.handleYoutubeDownload = handleYoutubeDownload;
 window.handleSpotifyLoad = handleSpotifyLoad;
 window.handleSpotifyDownload = handleSpotifyDownload;
+window.loadPlaylists = loadPlaylists;
+window.savePlaylists = savePlaylists;
+window.renderPlaylists = renderPlaylists;
+window.setActivePlaylistById = setActivePlaylistById;
+window.openAddToPlaylistModal = openAddToPlaylistModal;
+window.closeAddToPlaylistModal = closeAddToPlaylistModal;
+window.addSongToPlaylist = addSongToPlaylist;
 
 document.addEventListener('DOMContentLoaded', initStarterSidebar);

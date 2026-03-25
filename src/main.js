@@ -320,32 +320,114 @@ ipcMain.handle('remove-custom-css', async (event) => {
   }
 });
 
-// ── YouTube IPC handlers ──────────────────────────────────────────────────────
-// Fetch YouTube playlist metadata and download all videos
-ipcMain.handle('import-youtube-playlist', async (_event, { playlistUrl, playlistName, playlistCover, playlistDescription }) => {
+// ── YouTube Playlist IPC handlers ─────────────────────────────────────────────
+
+// Helper to send progress events to renderer
+function sendPlaylistProgress(data) {
+  const windows = BrowserWindow.getAllWindows();
+  if (windows.length > 0) {
+    windows[0].webContents.send('youtube-playlist-progress', data);
+  }
+}
+
+// Validate YouTube playlist URL (supports youtube.com and music.youtube.com)
+function isValidYoutubePlaylistUrl(url) {
+  return /^https?:\/\/(www\.)?(music\.)?youtube\.com\/playlist\?list=/.test(url);
+}
+
+// Get YouTube playlist info (preview only, no download)
+ipcMain.handle('get-youtube-playlist-info', async (_event, playlistUrl) => {
   try {
-    // Validate playlist URL
-    if (!/^https?:\/\/(www\.)?youtube\.com\/playlist\?list=/.test(playlistUrl)) {
+    if (!isValidYoutubePlaylistUrl(playlistUrl)) {
       return { success: false, message: 'Invalid YouTube playlist URL' };
     }
 
-    // Fetch playlist metadata
+    console.log('Fetching YouTube playlist info:', playlistUrl);
+
     const playlistInfo = await youtubedl(playlistUrl, {
       dumpSingleJson: true,
+      flatPlaylist: true,  // Only get metadata, don't fetch individual video info
       noCheckCertificates: true,
       noWarnings: true,
       skipDownload: true,
+      ignoreErrors: true,  // Continue even if some videos are unavailable
     });
 
-    const title = playlistInfo.title || playlistName || 'Untitled Playlist';
-    const description = playlistInfo.description || playlistDescription || '';
-    const coverUrl = playlistInfo.thumbnail || null;
+    const title = playlistInfo.title || 'Untitled Playlist';
+    const description = playlistInfo.description || '';
+    const thumbnail = playlistInfo.thumbnails?.[0]?.url || null;
+    // Filter out null entries (unavailable videos) when counting
+    const entries = playlistInfo.entries || [];
+    const availableCount = entries.filter(e => e && e.id).length;
+    const totalCount = playlistInfo.playlist_count || entries.length || 0;
 
-    // Download cover image if available
-    let coverDataUrl = null;
-    if (coverUrl) {
+    console.log('✓ Playlist info fetched:', { title, availableCount, totalCount });
+
+    return {
+      success: true,
+      playlist: {
+        title,
+        description,
+        thumbnail,
+        videoCount: availableCount,
+        totalCount: totalCount,
+        url: playlistUrl
+      }
+    };
+  } catch (error) {
+    console.error('Failed to fetch YouTube playlist info:', error);
+    return { success: false, message: error.message };
+  }
+});
+
+// Import YouTube playlist - download all videos and create playlist
+ipcMain.handle('import-youtube-playlist', async (_event, { playlistUrl, playlistName, playlistCover }) => {
+  try {
+    if (!isValidYoutubePlaylistUrl(playlistUrl)) {
+      return { success: false, message: 'Invalid YouTube playlist URL' };
+    }
+
+    console.log('Starting YouTube playlist import:', playlistUrl);
+
+    // Fetch playlist info with flat playlist first (just IDs, more reliable)
+    let playlistInfo;
+    try {
+      playlistInfo = await youtubedl(playlistUrl, {
+        dumpSingleJson: true,
+        flatPlaylist: true,  // Just get video IDs, more reliable
+        noCheckCertificates: true,
+        noWarnings: true,
+        skipDownload: true,
+      });
+    } catch (fetchErr) {
+      console.error('Failed to fetch playlist:', fetchErr.message);
+      return { success: false, message: 'Could not fetch playlist info. Make sure the URL is correct and the playlist is public.' };
+    }
+
+    const playlistTitle = playlistName || playlistInfo.title || 'YouTube Playlist';
+    // Filter out null/undefined entries (unavailable videos)
+    const videos = (playlistInfo.entries || []).filter(v => v && v.id);
+
+    if (videos.length === 0) {
+      return { success: false, message: 'No available videos found in playlist' };
+    }
+
+    console.log(`Found ${videos.length} videos to attempt downloading`);
+
+    // Send initial progress
+    sendPlaylistProgress({
+      status: 'starting',
+      message: `Found ${videos.length} songs to download`,
+      current: 0,
+      total: videos.length
+    });
+
+    // Download cover image if provided or from playlist thumbnail
+    let coverDataUrl = playlistCover || null;
+    if (!coverDataUrl && playlistInfo.thumbnails?.length > 0) {
       try {
-        const resp = await fetch(coverUrl);
+        const thumbUrl = playlistInfo.thumbnails[playlistInfo.thumbnails.length - 1].url;
+        const resp = await fetch(thumbUrl);
         if (resp.ok) {
           const buf = Buffer.from(await resp.arrayBuffer());
           const contentType = resp.headers.get('content-type') || 'image/jpeg';
@@ -356,62 +438,147 @@ ipcMain.handle('import-youtube-playlist', async (_event, { playlistUrl, playlist
       }
     }
 
-    // Iterate over videos in playlist
-    const videos = playlistInfo.entries || [];
-    const importedVideos = [];
-    for (const video of videos) {
+    // Download each video individually
+    const importedSongIds = [];
+    const failedVideos = [];
+    
+    for (let i = 0; i < videos.length; i++) {
+      const video = videos[i];
       const videoUrl = `https://www.youtube.com/watch?v=${video.id}`;
-      const videoTitle = video.title || 'Unknown Title';
-      const videoAuthor = video.uploader || video.channel || 'Unknown';
-      const safeName = videoTitle.replace(/[<>:"/\\|?*]/g, '_').substring(0, 100);
-      const timestamp = Date.now();
-      const mp3FileName = `${timestamp}_${safeName}.mp3`;
-      const mp3Path = path.join(musicFolderPath, mp3FileName);
+      // Use title from flat playlist or fallback
+      const videoTitle = video.title || `Track ${i + 1}`;
+      
+      console.log(`Processing (${i + 1}/${videos.length}): ${videoTitle}`);
 
-      // Download audio
-      await youtubedl(videoUrl, {
-        extractAudio: true,
-        audioFormat: 'mp3',
-        audioQuality: '192K',
-        output: mp3Path,
-        ffmpegLocation: ffmpegPath,
-        noCheckCertificates: true,
-        noWarnings: true,
+      // Send progress update
+      sendPlaylistProgress({
+        status: 'downloading',
+        message: `Downloading: ${videoTitle}`,
+        songTitle: videoTitle,
+        current: i + 1,
+        total: videos.length
       });
-      console.log('✓ Playlist video audio saved as MP3:', mp3Path);
 
-      // Download thumbnail
-      let destImagePath = null;
-      const thumbUrl = video.thumbnail || (video.thumbnails && video.thumbnails.length > 0 ? video.thumbnails[video.thumbnails.length - 1].url : null);
-      if (thumbUrl) {
-        try {
-          const response = await fetch(thumbUrl);
-          if (response.ok) {
-            const arrayBuf = await response.arrayBuffer();
-            const imageFileName = `${safeName}_thumbnail.jpg`;
-            destImagePath = path.join(thumbnailsFolderPath, imageFileName);
-            fs.writeFileSync(destImagePath, Buffer.from(arrayBuf));
-            console.log('✓ Playlist video thumbnail saved:', destImagePath);
-          }
-        } catch (thumbErr) {
-          console.warn('Could not download playlist video thumbnail:', thumbErr.message);
+      try {
+        // First, get video info to check availability and get metadata
+        const videoInfo = await youtubedl(videoUrl, {
+          dumpSingleJson: true,
+          noCheckCertificates: true,
+          noWarnings: true,
+          skipDownload: true,
+        });
+
+        const finalTitle = videoInfo.title || videoTitle;
+        const videoAuthor = videoInfo.uploader || videoInfo.channel || videoInfo.artist || 'Unknown Artist';
+        const safeName = finalTitle.replace(/[<>:"/\\|?*]/g, '_').substring(0, 100);
+        const timestamp = Date.now();
+        const mp3FileName = `${timestamp}_${safeName}.mp3`;
+        const mp3Path = path.join(musicFolderPath, mp3FileName);
+
+        // Download and convert to MP3
+        await youtubedl(videoUrl, {
+          extractAudio: true,
+          audioFormat: 'mp3',
+          audioQuality: '192K',
+          output: mp3Path,
+          ffmpegLocation: ffmpegPath,
+          noCheckCertificates: true,
+          noWarnings: true,
+        });
+        
+        // Check if file was actually created
+        if (!fs.existsSync(mp3Path)) {
+          throw new Error('Audio file was not created');
         }
-      }
+        
+        console.log('✓ Audio saved:', mp3Path);
 
-      // Store in database
-      const songId = addSong(videoTitle, mp3Path, destImagePath, videoAuthor, mp3FileName);
-      importedVideos.push({ songId, title: videoTitle, author: videoAuthor });
+        // Download thumbnail
+        let destImagePath = null;
+        const thumbUrl = videoInfo.thumbnail || (videoInfo.thumbnails?.length > 0 ? videoInfo.thumbnails[videoInfo.thumbnails.length - 1].url : null);
+        if (thumbUrl) {
+          try {
+            const response = await fetch(thumbUrl);
+            if (response.ok) {
+              const arrayBuf = await response.arrayBuffer();
+              const imageFileName = `${safeName}_thumbnail.jpg`;
+              destImagePath = path.join(thumbnailsFolderPath, imageFileName);
+              fs.writeFileSync(destImagePath, Buffer.from(arrayBuf));
+              console.log('✓ Thumbnail saved:', destImagePath);
+            }
+          } catch (thumbErr) {
+            console.warn('Could not download thumbnail:', thumbErr.message);
+          }
+        }
+
+        // Add song to database
+        const songId = addSong(finalTitle, mp3Path, destImagePath, videoAuthor, mp3FileName);
+        importedSongIds.push(songId);
+
+        // Send success progress
+        sendPlaylistProgress({
+          status: 'downloaded',
+          message: `✓ Downloaded: ${finalTitle}`,
+          songTitle: finalTitle,
+          current: i + 1,
+          total: videos.length,
+          completed: importedSongIds.length,
+          skipped: failedVideos.length
+        });
+      } catch (videoErr) {
+        console.warn(`⚠ Skipping video "${videoTitle}" (${video.id}):`, videoErr.message);
+        failedVideos.push(videoTitle);
+
+        // Send skip progress
+        sendPlaylistProgress({
+          status: 'skipped',
+          message: `⚠ Skipped (unavailable): ${videoTitle}`,
+          songTitle: videoTitle,
+          current: i + 1,
+          total: videos.length,
+          completed: importedSongIds.length,
+          skipped: failedVideos.length
+        });
+        // Continue with next video
+      }
     }
+
+    if (importedSongIds.length === 0) {
+      sendPlaylistProgress({
+        status: 'error',
+        message: `Failed to download any videos. ${failedVideos.length} videos were unavailable.`
+      });
+      return { success: false, message: `Failed to download any videos. ${failedVideos.length} videos were unavailable or restricted.` };
+    }
+
+    // Send completion progress
+    sendPlaylistProgress({
+      status: 'complete',
+      message: `✓ Playlist complete! ${importedSongIds.length} songs imported.`,
+      completed: importedSongIds.length,
+      skipped: failedVideos.length,
+      total: videos.length
+    });
+
+    // Create playlist entry in localStorage format for frontend to save
+    const playlistEntry = {
+      id: `${playlistTitle.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
+      name: playlistTitle,
+      description: playlistInfo.description || '',
+      cover: coverDataUrl,
+      songs: importedSongIds,
+      system: false
+    };
+
+    console.log(`✓ Playlist import complete: ${importedSongIds.length}/${videos.length} songs imported (${failedVideos.length} skipped)`);
 
     return {
       success: true,
-      playlist: {
-        title,
-        description,
-        cover: coverDataUrl,
-        videos: importedVideos,
-      },
-      message: 'Playlist imported successfully',
+      playlistName: playlistTitle,
+      songsImported: importedSongIds.length,
+      totalVideos: videos.length,
+      skippedVideos: failedVideos.length,
+      playlist: playlistEntry
     };
   } catch (error) {
     console.error('YouTube playlist import failed:', error);

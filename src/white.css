@@ -567,3 +567,31 @@ button:hover {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.25);
 }
+
+/* ── Add to Playlist Modal ─────────────────────────── */
+.add-to-playlist-item {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.add-to-playlist-item:hover {
+  background: rgba(98, 70, 234, 0.10);
+  border-color: rgba(98, 70, 234, 0.30);
+}
+
+.add-to-playlist-item.already-added {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.add-to-playlist-item.already-added:hover {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.add-to-playlist-dot {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.add-to-playlist-item.already-added .add-to-playlist-status {
+  color: #16a34a;
+}
